@@ -1,0 +1,6 @@
+*.o
+*.pyc
+*.log
+*.aux
+*.out
+*auto/
