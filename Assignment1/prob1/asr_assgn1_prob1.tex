@@ -11,6 +11,10 @@
 \usepackage{caption}
 \usepackage{subcaption}
 \usepackage{float}
+\usepackage{amsmath,amssymb}
+
+\DeclareMathOperator{\E}{\mathbb{E}}
+
 
 \title{CS 753 : Automatic Speech Recognition Assignment 1 Problem 1}
 \author{Arka Sadhu - 140070011}
@@ -18,6 +22,102 @@
 
 \begin{document}
 \maketitle
+\section{Part A}
+We are given that  the probability of sending bit $0$ is $p$ and sending bit $1$ is $1-p$. It is also mentioned that the bits are independent and indentically distributed.\\
+Also it is given that the channel is noisy and therefore a bit can be flipped with a probability of $\delta$, and therefore  remains unchanged with probability $1-\delta$.\\
+We need to find the probability that the $k^{th}$ symbol received is $0$.\\
 
+Since the bits are independent the probability of $k^{th}$ symbol is not dependent upon the other symbols. Also it can be assumed that the channel doesn't have a time delaying effect and therefore it affects only the considered bit with a probability given by $\delta$.
 
+The $k^{th}$ symbol can be received as $0$ in two ways:
+\begin{itemize}
+\item The sent bit was $0$ and no flipping occurred. The probability of this happening is $P1 = p(1-\delta)$.
+\item The sent bit was $1$ and flipping occurred. The probability of this is $P2 = (1-p)\delta$.
+\end{itemize}
+
+Since the two events are mutually exclusive, therefore the probabilities simply add up.
+Therefore
+\begin{equation}
+  \label{eq:q1a}
+  Pr(\mathrm{k^{th} symbol received = 0}) = p(1-\delta) + (1-p)\delta
+\end{equation}
+
+\section{Part B}
+A repetition code is used such that $0$ is encoded as $000$ and $1$ as $111$ and the decoder outputs a majority bit on the receiving 3-bit string.\\
+We need to find the probability of correctly decoding $0$.
+
+It is easy to see that $0$ will be correctly decoded when at most 1 bit is flipped. This can happen in one of the following ways:
+\begin{itemize}
+\item None of the bits get flipped. $Pr(\mathrm{No bit flipped}) = (1-\delta)^3$
+\item Exactly one of the bits gets flipped. $Pr(\mathrm{Exactly one bit flipped}) = 3 \delta (1 - \delta)^2$
+\end{itemize}
+Again the above are mutually exclusive, the probabilities add up.
+Therefore
+\begin{equation}
+  \label{eq:q1b}
+  Pr(\mathrm{0 being correctly decoded}) = (1 - \delta)^3 + 3 \delta (1 - \delta)^2
+\end{equation}
+
+\section{Part C}
+Now it is said that each bit is transmitted unencoded. But the decoder is allowed to output $\{0,1,\bot\}$. \\
+If the decoder output is incorrect then the penalty points are $2$ and if it outputs it to be $\bot$ then it gets penalty $1$.\\
+The aim is to find the best decoding strategy which can minimize the expected penalty. We are given $\delta=\frac{1}{8}$ and want the best strategy for $p \in [0,1]$.\\
+
+We first do the problem more generally and then impose the conditions given to us. We take that on output of $\bot$ the penalty is $1$ and the output on incorrect bit the penalty is $X_1$. Also we don't put the value of $\delta$ till the last step.\\
+
+The decoder either sees $0$ or $1$ and chooses on of the three options $\{0,1,\bot\}$. We assign probabilities to each of the six cases.
+\begin{center}
+  \begin{tabular}[H]{|l|l|l|l|}
+    \hline
+    & 0 & 1 & $\bot$\\
+    \hline
+    0 & $\rho_1$ & $\rho_2$ & $\rho_3$\\
+    \hline
+    1 & $\rho_4$ & $\rho_5$ & $\rho_6$\\
+    \hline
+  \end{tabular}
+\end{center}
+
+Let the expected penalty be denoted by $\E[Pen]$. Clearly there are four ways in which penalty can arise:
+\begin{itemize}
+\item Sender sends $0$, bit is not flipped (stays $0$). Penalty arises when detector declares it either $1$ or $\bot$. $$\E[Pen|case_1] = X_1\rho_2 + \rho_3$$
+  $$Pr(case_1) = p(1-\delta)$$
+\item Sender sends $0$, bit is flipped (becomes $1$). Penalty arises when detector declares it either $1$ or $\bot$. $$\E[Pen|case_2] = X_1\rho_5  + \rho_6$$
+  $$Pr(case_2) = p\delta$$
+\item Sender sends $1$, bit is flipped (becomes $0$). Penalty arises when detector declares it either $0$ or $\bot$. $$\E[Pen|case_3] = X_1 \rho_1 + \rho_3$$
+  $$Pr(case_3) = (1-p)\delta$$
+\item Sender sends $1$ bit is not flipped (stays $1$). Penalty arises when detector declares it either $0$ or $\bot$. $$\E[Pen|case_4] = X_1 \rho_4 + \rho_6$$
+  $$Pr(case_4) = (1-p)(1-\delta)$$
+\end{itemize}
+
+Also $$\E[Pen] = \sum_i\E[Pen|case_i]Pr(case_i)$$
+\begin{equation}
+  \label{eq:c1}
+  \E[Pen] = \rho_1 (X_1 \delta (1-p)) + \rho_2 (X_1 p (1 - \delta)) + \rho_3(p(1-\delta) + \delta(1-p)) + \rho_4(X_1(1-p)(1-\delta)) + \rho_5(X_1p\delta) + \rho_6(p\delta + (1-p)(1-\delta)) %
+\end{equation}
+
+% $$\E[Pen] = \rho_1 (X_1 \delta (1-p)) + \rho_2 (X_1 p (1 - \delta)) + \rho_3(p(1-\delta) + \delta(1-p)) + \rho_4(X_1(1-p)(1-\delta)) + \rho_5(X_1p\delta) + \rho_6(p\delta + (1-p)(1-\delta))$$ %
+\vspace{0.5cm}
+Now we want to minimize the objective function in \ref{eq:c1}. The parameters are $\{\rho_1, \rho_2, \rho_3, \rho_4, \rho_5, \rho_6\}$. Moreover the parameters are constrained in the following ways:
+\begin{equation}
+  \label{eq:c2}
+  \begin{aligned}
+  \rho_1 + \rho_2 + \rho_3 &= 1\\
+  \rho_4 + \rho_5 + \rho_6 &= 1
+  \end{aligned}
+\end{equation}
+
+\begin{equation}
+  \label{eq:c3}
+  \begin{aligned}
+    \rho_1 \ge 0 ,& \hspace{0.3cm}\rho_2 \ge 0 ,& \rho_3 \ge 0\\
+    \rho_4 \ge 0 ,& \hspace{0.3cm}\rho_5 \ge 0 ,& \rho_6 \ge 0
+  \end{aligned}
+\end{equation}
+
+We note that the inequality of $ \le 1$ is implied when the two constraints \ref{eq:c2} and \ref{eq:c3} are met. It is quite easy to see that the above can be posed as a linear programming problem with \ref{eq:c2} and \ref{eq:c3} being the constraints $Ax=b$ and $x \ge 0$. Therefore we can be guarenteed the solution to the above minimization problem lies in on the corners of the vector space $\{\rho_i\}_{i=1}^6$.
+
+Also from the simplex algorithm it can be directly seen that the solutions will be of the form such that one of $\rho_i|_{i=1}^3$ will be $1$ and other two $0$, and the same for the $\rho_i|_{i=4}^6$. Since our objective is to minimize we can simply chooose the $\rho_i$ whose coefficient is minimum. Therefore calculating the coefficients at once gives us the decoding strategy at once. Also since the probabilities come out to be $0$ or $1$, the decoding strategy turns out to be deterministic.
+
+Now we simply get the coefficient values for $X_1 = 2$ and $\delta = \frac{1}{8}$.
 \end{document}
