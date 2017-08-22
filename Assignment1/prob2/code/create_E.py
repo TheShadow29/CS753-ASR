@@ -12,14 +12,12 @@ str_to_write = ''
 e_fst_file = open('E_text.fst', 'w')
 
 zero = '0'
-one = '0'
-
-
+one = '1'
 
 str_to_write += '0\n'           #
-# str_to_write += '1\n'
+str_to_write += '1\n'
 
-for l in data[0][1:4]:
+for l in data[0][1:]:
     alphabets = list(string.ascii_lowercase)
     alphabets.remove(l)
     #substitution
