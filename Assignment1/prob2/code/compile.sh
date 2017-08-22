@@ -4,8 +4,10 @@ text=$3
 bin=$4
 opt="_opt"
 # bin_opt=$bin _opt
-fstcompile --isymbols=$isymb --osymbols=$osymb $text $bin.fst
-fstrmepsilon $bin.fst | fstdeterminize | fstminimize > $bin$opt.fst
 binopt=$bin$opt
-fstdraw --isymbols=$isymb --osymbols=$osymb $binopt.fst $binopt.dot
-dot -Tpng $binopt.dot > $binopt.png
+bin_dir='./bin/'
+dot_dir='./dot/'
+fstcompile --isymbols=$isymb --osymbols=$osymb $text $bin_dir$bin.fst
+fstrmepsilon $bin_dir$bin.fst | fstdeterminize | fstminimize > $bin_dir$binopt.fst
+fstdraw --isymbols=$isymb --osymbols=$osymb $bin_dir$binopt.fst $dot_dir$binopt.dot
+dot -Tpng $dot_dir$binopt.dot > $dot_dir$binopt.png

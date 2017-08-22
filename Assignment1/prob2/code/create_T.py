@@ -1,11 +1,11 @@
 from __future__ import print_function
 
 word_file = open('../assgmt1/words.vocab')
-letter_file = open('../assgmt1/lets.vocab')
+# letter_file = open('../assgmt1/lets.vocab')
 
 words = word_file.readlines()
 
-t_fst_file = open('T.fst', 'w')
+t_fst_file = open('T_text.fst', 'w')
 str_to_write = ''
 str_format = '{} {} {} {}\n'
 str_final_state_format = '{}\n'

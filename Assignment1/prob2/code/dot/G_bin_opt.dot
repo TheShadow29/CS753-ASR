@@ -1,0 +1,16 @@
+digraph FST {
+rankdir = LR;
+size = "8.5,11";
+label = "";
+center = 1;
+orientation = Landscape;
+ranksep = "0.4";
+nodesep = "0.25";
+0 [label = "0", shape = doublecircle, style = bold, fontsize = 14]
+	0 -> 0 [label = "fawn:fawn/5.8398", fontsize = 14];
+	0 -> 0 [label = "gradiwally:gradiwally/5.8398", fontsize = 14];
+	0 -> 0 [label = "nunnery:nunnery/5.8398", fontsize = 14];
+	0 -> 0 [label = "fleeces:fleeces/5.8398", fontsize = 14];
+	0 -> 0 [label = "woods:woods/4.0547", fontsize = 14];
+	0 -> 0 [label = "clotted:clotted/5.5391", fontsize = 14];
+}
