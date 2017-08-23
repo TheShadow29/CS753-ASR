@@ -122,8 +122,8 @@ Also from the simplex algorithm it can be directly seen that the solutions will 
 Now we simply get the coefficient values for $X_1 = 2$ and $\delta = \frac{1}{8}$.
 \begin{table}[H]
 \centering
-\caption{My caption}
-\label{my-label}
+\caption{$\rho_i, coeff_i$}
+\label{t:1}
 \begin{tabular}{|l|l|l|l|l|l|l|}
 \hline
           & $\rho_1$        & $\rho_2$       & $\rho_3$           & $\rho_4$           & $\rho_5$      & $\rho_6$           \\ \hline
@@ -149,6 +149,42 @@ This means that the decoder never chooses the $\bot$ symbol.
 Further we can get the decoding strategy for each of $p \in [0,1]$.
 \begin{itemize}
 \item For $p \in [0, \frac{1}{8}]$
+  \begin{table}[H]
+    \centering
+    \caption{$p \in [0, \frac{1}{8}]$}
+    \label{t:2}
+    \begin{tabular}{|l|l|l|l|l|l|}
+      \hline
+      $\rho_1$ & $\rho_2$ & $\rho_3$ & $\rho_4$ & $\rho_5$ & $\rho_6$ \\ \hline
+      0        & 1        & 0        & 0        & 1        & 0        \\ \hline
+    \end{tabular}
+  \end{table}
+  This means that when the decoder knows that $p \in [0, \frac{1}{8}]$ then it chooses the symbol to be 1 irrespective of what it sees.
+\item For $p \in [\frac{1}{8}, \frac{7}{8}]$
+  \begin{table}[H]
+    \centering
+    \caption{$p \in [\frac{1}{8}, \frac{7}{8}]$}
+    \label{t:3}
+    \begin{tabular}{|l|l|l|l|l|l|}
+      \hline
+      $\rho_1$ & $\rho_2$ & $\rho_3$ & $\rho_4$ & $\rho_5$ & $\rho_6$ \\ \hline
+      1        & 0        & 0        & 0        & 1        & 0        \\ \hline
+    \end{tabular}
+  \end{table}
+  When decoder knows that $p \in [\frac{1}{8}, \frac{7}{8}]$ then it chooses the same symbol as it is appearing.
+\item For $p \in [\frac{7}{8}, 1]$
+  \begin{table}[H]
+    \centering
+    \caption{$p \in [\frac{7}{8}, 1]$}
+    \label{t:4}
+    \begin{tabular}{|l|l|l|l|l|l|}
+      \hline
+      $\rho_1$ & $\rho_2$ & $\rho_3$ & $\rho_4$ & $\rho_5$ & $\rho_6$ \\ \hline
+      1        & 0        & 0        & 1        & 0        & 0        \\ \hline
+    \end{tabular}
+  \end{table}
+  When decoder knows that $p \in [\frac{7}{8}, 1]$ then it chooses the symbol 0 irrespective of what it sees.
 \end{itemize}
+
 
 \end{document}
