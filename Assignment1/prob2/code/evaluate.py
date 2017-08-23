@@ -51,7 +51,7 @@ tmp2_fst = out_dir + 'tmp2.fst'
 tmp3_fst = out_dir + 'tmp3.fst'
 tmp4_fst = out_dir + 'tmp4.fst'
 
-for i in range(data.last_valid_index()):
+for i in range(data.last_valid_index() + 1):
     ind, w_correct, w_wrong = data.loc[i]
 
     call(['fstcompose', mdir + str(ind) + '.fsa', e_fst_file, tmp1_fst])
