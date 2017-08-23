@@ -10,7 +10,7 @@ str_to_write = ''
 str_format = '{} {} {} {}\n'
 str_final_state_format = '{}\n'
 ctr = 0
-for w in words[:6]:
+for w in words[:]:
     w1 = w.split('\t')
     w1[-1] = w1[-1].split('\n')[0]
     curr_word = w1[0]

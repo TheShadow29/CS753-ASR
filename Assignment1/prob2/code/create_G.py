@@ -17,7 +17,7 @@ str_format = '0 0 {} {} {}\n'
 
 str_to_write += '0\n'
 
-for ind, w in enumerate(data[0][:6]):
+for ind, w in enumerate(data[0][:]):
     str_to_write += str_format.format(w, w, neg_log_prob_arr[ind])
 
 print(str_to_write)
