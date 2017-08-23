@@ -27,7 +27,8 @@ data.columns = [0, 1, 2]
 
 out_dir = './eval/'
 dot_dir = out_dir + '/dot/'
-txt_dir = out_dir + '/txt_dir/'
+# txt_dir = out_dir + '/txt_dir/'
+txt_dir = out_dir + '/txt_dup_dir/'
 if not os.path.exists(out_dir):
     os.makedirs(out_dir)
 if not os.path.exists(dot_dir):
@@ -52,6 +53,7 @@ tmp3_fst = out_dir + 'tmp3.fst'
 tmp4_fst = out_dir + 'tmp4.fst'
 
 for i in range(data.last_valid_index() + 1):
+# for i in range(1):
     ind, w_correct, w_wrong = data.loc[i]
 
     call(['fstcompose', mdir + str(ind) + '.fsa', e_fst_file, tmp1_fst])

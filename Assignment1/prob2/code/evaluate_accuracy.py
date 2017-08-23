@@ -11,15 +11,17 @@ num_cor = 0
 tot_num = 0
 fname_format = './eval/txt_dir/{}.txt'
 for i in range(data.last_valid_index() + 1):
+    guess = False
     ind, w_corr, w_wrong = data.loc[i]
     fname = fname_format.format(str(ind))
     with open(fname, 'r') as f:
         lines = f.read()
         patterns = pat.findall(lines)
 
-    print(ind, w_corr, w_wrong, patterns[0][3])
+
     if patterns[0][3] == w_corr:
         num_cor += 1
+        guess = True
     tot_num += 1
-
+    print(ind, w_corr, w_wrong, patterns[0][3], guess)
 print(num_cor, tot_num, num_cor/tot_num)
