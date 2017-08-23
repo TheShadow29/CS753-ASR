@@ -11,6 +11,11 @@
 \usepackage{caption}
 \usepackage{subcaption}
 \usepackage{float}
+\usepackage{amsmath}
+
+\DeclareMathOperator*{\argmax}{\arg\!\max}
+\newcommand{\gamp}{\gamma_{\rho}}
+\newcommand{\Lp}{\mathcal{L_\rho(\rho')}}
 
 \title{CS 753 : Automatic Speech Recognition Assignment 1 Problem 3}
 \author{Arka Sadhu - 140070011}
@@ -18,6 +23,105 @@
 
 \begin{document}
 \maketitle
+\section{Part A}
+We are given a machine which has internally two coins G, S. Probability of heads for Gold coin is $p_1 = \frac{1}{2}$ and probability of heads for Silver coin is $p_2 = \frac{1}{4}$. \\
+
+Also it is given that when we press the button on the machine, it probabilistically chooses the Gold coin with probability $\rho$ and the silver coin $1 - \rho$.\\
+
+We are let $Z = \{G, S\}$ for Gold and Silver, and the $X = \{H, T\}$.
+
+We then define $\gamp(z, x) = Pr(Z = z | X = x)$. We need to find $\gamp$ for all values of $z \in \{G,S\}$ and $x \in \{H, T\}$.
+
+Clearly there are only four possible cases.
+\begin{itemize}
+\item $z = G$ and $x = H$.
+  $$\gamp(G, H) = Pr(z = G|x =H) = \frac{Pr(z = G,x = H)}{Pr(x =H)}$$
+  $$Pr(x = H) = Pr(x = H|z = G)Pr(z = G) + Pr(x = H|z = S)Pr(z = S)$$
+  $$Pr(x = H) = p_1 \rho + p_2 (1 - \rho)$$
+  $$\gamp(G, H) = \frac{p_1 \rho}{p_1 \rho + p_2 (1 - \rho)}$$
+\item $z = S$ and $x = H$
+  $$\gamp(S, H) = Pr(z = S|x =H) = \frac{Pr(z = S,x = H)}{Pr(x =H)} = \frac{Pr(x = H| z = S)Pr(z = S)}{Pr(x = H)}$$
+  $$\gamp(S, H) = \frac{p_2 (1 -\rho)}{p_1 \rho + p_2 (1 - \rho)}$$
+\item $z = G$ and $x = T$
+  $$\gamp(G, T) = Pr(z = G|x =T) = \frac{Pr(z = G,x = T)}{Pr(x =T)}$$
+  $$Pr(x = T) = Pr(x = T|z = G)Pr(z = G) + Pr(x = T|z = S)Pr(z = S)$$
+  $$Pr(x = T) = (1 - p_1) \rho + (1 - p_2)(1 - \rho)$$
+  $$\gamp(G, T) = \frac{(1 - p_1) \rho}{(1 - p_1) \rho + (1 - p_2)(1 - \rho)}$$
+\item $z = S$ and $x = T$
+  $$\gamp(S, T) = Pr(z = S|x =T) = \frac{Pr(z = S,x = T)}{Pr(x =T)} = \frac{Pr(x = T| z = S)Pr(z = S)}{Pr(x = T)}$$
+  $$\gamp(S, T) = \frac{(1 - p_2)(1 - \rho)}{(1 - p_1) \rho + (1 - p_2)(1 - \rho)}$$
+\end{itemize}
+
+\section{Part B}
+We note that $\rho$ can be estimated using the Expectation Maximization (EM) algorithm from the set of observations $x_1...x_N$ ($x_i \in {H,T}$).\\
+EM is an iterative algorithm and at each round it updates the current estimate of $\rho$ to a new estimate $\rho'$ which maximizes the expression \ref{eq:1}
+\begin{equation}
+  \label{eq:1}
+  \Lp = \sum_{i = 1}^{N} \sum_{z \in \{G,S\}}\gamp(z,x_i)\cdot log(Pr(z, x_i; \rho'))
+\end{equation}
+
+We would like to find $$\argmax_{\rho'}\Lp$$\\
+
+% \Lp = \sum_{z \in \{G,S\}}\sum_{i=1}^{N_H}\gamp(z, H)\cdot log(Pr(z, H; \rho')) + \sum_{z \in \{G,S\}}\sum_{j=1}^{N_T}\gamp(z,T)\cdot log(Pr(z, T; \rho')))
+\begin{equation}
+  \label{eq:2}
+  \Lp = \sum_{i=1}^N [\gamp(G, x_i)\cdot log(Pr(G, x_i; \rho')) + \gamp(S, x_i)\cdot log(Pr(S, x_i; \rho'))]
+\end{equation}
+
+\begin{multline}
+  \label{eq:3}
+  \Lp = \sum_{i=1}^{N_H}[\gamp(G, H)\cdot log(Pr(G, H; \rho')) + \gamp(S, H)\cdot log(Pr(S, H; \rho'))]  \\ + \sum_{j=1}^{N_T}[\gamp(G, T)\cdot log(Pr(G, T; \rho')) + \gamp(S, T)\cdot log(Pr(S, T; \rho'))]
+\end{multline}
 
 
+For convenience, we use a shortform for the variables given below:
+$$c_1 = \gamp(G, H)$$
+$$c_2 = \gamp(S, H)$$
+$$c_3 = \gamp(G, T)$$
+$$c_4 = \gamp(S, T)$$
+Also we note
+$$Pr(G, H; \rho') = Pr(H|G; \rho')Pr(G; \rho') = p_1\rho'$$
+$$Pr(S,H;\rho') = Pr(H|S; \rho')Pr(S; \rho') = p_2(1 - \rho')$$
+$$Pr(G, T; \rho') = Pr(T|G; \rho')Pr(G; \rho') = (1 - p_1)\rho'$$
+$$Pr(S,T;\rho') = Pr(T|S; \rho')Pr(S; \rho') = (1 - p_2)(1 - \rho')$$
+
+\begin{equation}
+  \label{eq:4}
+  \Lp = \sum_{i=1}^{N_H}[c_1\cdot log(p_1\rho') + c_2 \cdot log(p_2(1-\rho'))] + \sum_{j=1}^{N_T}[c_3 \cdot log((1 - p_1)\rho') + c_4 \cdot log((1-p_2)(1-\rho'))]
+\end{equation}
+
+To get $\argmax_{\rho'}\Lp$ we differentiate $\Lp$ w.r.t. $\rho'$.
+
+\begin{equation}
+  \label{eq:5}
+  \frac{d\Lp}{d\rho'} = \sum_{i=1}^{N_H}[\frac{c_1}{\rho'} - \frac{c_2}{1-\rho'}] + \sum_{j=1}^{N_T}[\frac{c_3}{\rho'} - \frac{c_4}{1-\rho'}] = 0
+\end{equation}
+
+\begin{equation}
+  \label{eq:6}
+  [\frac{c_1}{\rho'} - \frac{c_2}{1-\rho'}] N_H + [\frac{c_3}{\rho'} - \frac{c_4}{1-\rho'}] N_T = 0
+\end{equation}
+
+Rearranging the equation we get
+\begin{equation}
+  \label{eq:7}
+  \rho' = \frac{c_1 N_H + c_3 N_T}{(c_1 + c_2)N_H + (c_3 + c_4)N_T}
+\end{equation}
+From the definitions of $c_1, c_2, c_3, c_4$ we know $c_1 + c_2 = 1$ and $c_3 + c_4 = 1$. Therefore \ref{eq:7} reduces to
+\begin{equation}
+  \label{eq:8}
+  \rho' = \frac{c_1 N_H + c_3 N_T}{N_H + N_T}
+\end{equation}
+
+Putting the values of $c_1$ and $c_3$ we get
+\begin{equation}
+  \label{eq:9}
+  \rho' = \frac{p_1 \rho}{p_1 \rho + p_2 (1 - \rho)}\cdot \frac{N_H}{N_H + N_T} + \frac{(1 - p_1)\rho}{(1-p_1) \rho + (1 - p_2) (1 - \rho)}\cdot \frac{N_T}{N_H + N_T}
+\end{equation}
+
+We can now simply put in the values of $p_1 = \frac{1}{2}$ and $p_2 = \frac{1}{4}$.
+\begin{equation}
+  \label{eq:10}
+  \rho' = \frac{2\rho}{1+\rho}\cdot \frac{N_H}{N_H + N_T} + \frac{2\rho}{3 - \rho}\cdot \frac{N_T}{N_H + N_T}
+\end{equation}
 \end{document}

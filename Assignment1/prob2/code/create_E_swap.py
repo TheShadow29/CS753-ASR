@@ -11,9 +11,10 @@ str_format = '0 0 {} {} {}\n'
 str2_format = '{} {} {} {} {}\n'
 str_to_write = ''
 
-e_fst_file = open('E_dup_text.fst', 'w')
-
+e_fst_file = open('E_swap_text.fst', 'w')
+ctr = 1
 for l in data[0][1:]:
+# for l in 'ab':
     # pdb.set_trace()
     alphabets = list(string.ascii_lowercase)
     alphabets.remove(l)
@@ -26,11 +27,11 @@ for l in data[0][1:]:
     str_to_write += str_format.format('-', l, str(1))
     # self-loop
     str_to_write += str_format.format(l, l, str(0))
-    # swapping
+    # swap code
     for alph in alphabets:
-        str_to_write += str2_format.format()
-
-
+        str_to_write += str2_format.format(0, ctr, l, alph, 0)
+        str_to_write += str2_format.format(ctr, 0, alph, l, 1)
+        ctr += 1
 
 str_to_write += '0\n'
 

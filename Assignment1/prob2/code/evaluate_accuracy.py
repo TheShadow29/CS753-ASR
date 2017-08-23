@@ -5,11 +5,14 @@ import re
 
 data = pd.read_csv('../assgmt1/dev.txt', sep='\t', header=None)
 data.columns = [0,1,2]
-pat = re.compile(r'(\d*)\t(\d*)\t(.)\t(.*)\t(\d.\d*)')
+pat = re.compile(r'(\d*)\t(\d*)\t(.)\t(\w*)\t(\d.\d*)')
 
 num_cor = 0
 tot_num = 0
-fname_format = './eval/txt_dir/{}.txt'
+# fname_format = './eval/txt_dir2/{}.txt'
+tuple_list_dup = list()
+# fname_format = './eval/txt_dup_dir2/{}.txt'
+fname_format = './eval/txt_swap_dir2/{}.txt'
 for i in range(data.last_valid_index() + 1):
     guess = False
     ind, w_corr, w_wrong = data.loc[i]
@@ -18,10 +21,10 @@ for i in range(data.last_valid_index() + 1):
         lines = f.read()
         patterns = pat.findall(lines)
 
-
     if patterns[0][3] == w_corr:
         num_cor += 1
         guess = True
     tot_num += 1
+    tuple_list_dup.append((ind, w_corr, w_wrong, patterns[0][3], guess))
     print(ind, w_corr, w_wrong, patterns[0][3], guess)
 print(num_cor, tot_num, num_cor/tot_num)
