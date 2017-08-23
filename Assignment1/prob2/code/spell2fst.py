@@ -50,4 +50,4 @@ for ind, w in enumerate(data[2]):
     with open(full_fname, 'w') as f:
         f.write(str_to_write)
 
-    call(['fstcompile','--acceptor','-isymbols=' + vocab_file, full_fname, out_bin_dir + fid + '.fsa'])
+    call(['fstcompile','--acceptor','-isymbols=' + vocab_file, '--keep_isymbols', '--keep_osymbols', full_fname, out_bin_dir + fid + '.fsa'])
