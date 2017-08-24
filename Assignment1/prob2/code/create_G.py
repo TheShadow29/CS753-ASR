@@ -9,7 +9,7 @@ data.columns = [0, 1]
 arr = np.array(data[1])
 tot_count = arr.sum()
 arr1 = arr / tot_count
-neg_log_prob_arr = -np.log10(arr1)
+neg_log_prob_arr = -np.log10(arr1) / 2
 
 g_fst_file = open('G_text.fst', 'w')
 str_to_write = ''

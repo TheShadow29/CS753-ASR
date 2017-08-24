@@ -5,17 +5,18 @@ import pandas as pd
 import re
 
 parser = argparse.ArgumentParser()
+parser.add_argument('dev', type=str, help='devtxt')
 parser.add_argument("--indir", type=str, help="input dir")
 parser.add_argument("--ofile", type=str, help="output file")
 args = parser.parse_args()
 
 indir = args.indir
 ofile = args.ofile
-
+dev_txt_fname = args.dev
 if indir[-1] != '/':
     indir += '/'
 
-data = pd.read_csv('../assgmt1/dev.txt', sep='\t', header=None)
+data = pd.read_csv(dev_txt_fname, sep='\t', header=None)
 data.columns = [0,1,2]
 pat = re.compile(r'(\d*)\t(\d*)\t(.)\t(\w*)\t(\d.\d*)')
 
@@ -34,6 +35,7 @@ for i in range(data.last_valid_index() + 1):
         lines = f.read()
         patterns = pat.findall(lines)
     if len(patterns) == 0:
+        tot_num +=1
         continue
     if patterns[0][3] == w_corr:
         num_cor += 1

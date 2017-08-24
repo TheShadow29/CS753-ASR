@@ -9,6 +9,7 @@ import re
 import numpy as np
 
 parser = argparse.ArgumentParser()
+parser.add_argument('dev', type=str, help='devtxt')
 parser.add_argument("--Mdir", type=str, help="dev word dir")
 parser.add_argument("--E", type=str, help="E.fst location")
 parser.add_argument("--T", type=str, help="T.fst location")
@@ -22,9 +23,10 @@ if mdir[-1] != '/':
 e_fst_file = args.E
 t_fst_file = args.T
 g_fst_file = args.G
+dev_txt_fname = args.dev
 pat = re.compile(r'(\d*)\t(\d*)\t\w\t(.*)\t(\d.\d*)')
 # print(mdir, e_fst_file, t_fst_file, g_fst_file)
-data = pd.read_csv('../assgmt1/dev.txt', sep='\t', header=None)
+data = pd.read_csv(dev_txt_fname, sep='\t', header=None)
 data.columns = [0, 1, 2]
 
 out_dir = args.odir

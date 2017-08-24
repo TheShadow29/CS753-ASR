@@ -1,3 +1,20 @@
 Arka Sadhu
 140070011
 CS753 : Assignment 1
+
+For q2:
+spell2fst.py and evaluate.py are executables.
+Usage :
+./spell2fst.py --odir=dev_wrd --vocab=assgmt1/lets.vocab assgmt1/dev.txt
+./evaluate.py --Mdir=dev_wrd --E=E.fst --T=T.fst --G=G.fst assgmt1/dev.txt
+
+spell2fst creates the output directory if it is not already present. The output directory will have {i}.fsa.txt and a bin folder, which will have all the compiled fsa.
+
+So when calling evaluate.py we need to use --Mdir=dev_wrd/bin/ to get the compiled fsa's.
+
+For extra-credit the following has been done:
+
+E_extra is same as the E_swap with the only change that it now allows more than one edit distances. Also the weights given is increased. Otherwise some words map to very frequent words like and because of their probabilities in G.fst.
+On the dev_wrd set the accuracy achieved in 0.70.
+
+All python-files used in the process are also put in the folder prob2/creator_files
