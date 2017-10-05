@@ -93,7 +93,7 @@ utils/gen_topo.pl $num_nonsil_states $num_sil_states $nonsilphonelist $silphonel
 # words (no silence in this, since that's handled in L.fst)
 # there are 10 options: down, eight, five, go, left, one, right, 
 # up, zero and end-of-sentence.
-penalty=`perl -e '$prob = 1.0/12; print -log($prob); '` # negated log-prob,
+penalty=`perl -e '$prob = 1.0/10; print -log($prob); '` # negated log-prob,
   # which becomes the cost on the FST.
 ( for x in `echo down eight five go left one right up zero`; do
    echo 0 0 $x $x $penalty   # format is: from-state to-state input-symbol output-symbol cost
