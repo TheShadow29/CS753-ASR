@@ -4,3 +4,14 @@
 *.aux
 *.out
 *auto/
+*.zip
+*.tar
+*.tgz
+*.wav
+*recipe/conf
+*recipe/corpus
+*recipe/data
+*recipe/exp
+*recipe/local
+*recipe/mfcc
+*recipe/utils
