@@ -13,52 +13,131 @@ set -e -o pipefail
 ###############################################################
 #                   Configuring the ASR pipeline
 ###############################################################
-stage=0    # from which stage should this script start
+stage=8    # from which stage should this script start
 corpus=./corpus  # corpus containing speech,transcripts,pronunciation dictionary
 nj=4        # number of parallel jobs to run during training
-dev_nj=4    # number of parallel jobs to run during decoding 
+dev_nj=4    # number of parallel jobs to run during decoding
 # the above two parameters are typically set to the number of cores on your machine
 ###############################################################
 
 # The following command prepares the data/{train,dev} directories.
-local/prepare_data.sh $corpus || exit 1;
-local/prepare_lang.sh  || exit 1;
-utils/validate_lang.pl data/lang/
-
+if [ $stage -le 0 ]; then
+	local/prepare_data.sh $corpus || exit 1;
+	local/prepare_lang.sh  || exit 1;
+	utils/validate_lang.pl data/lang/
+fi
 # Now make MFCC features.
 # mfccdir should be some place with a largish disk where you
 # want to store MFCC features.
 mfccdir=mfcc
-for x in train dev; do
-  steps/make_mfcc.sh --cmd "$train_cmd" --nj $nj \
-    data/$x exp/make_mfcc/$x $mfccdir || exit 1;
-  steps/compute_cmvn_stats.sh data/$x exp/make_mfcc/$x $mfccdir || exit 1;
-done
+
+if [ $stage -le 0 ]; then
+	for x in train dev; do
+		steps/make_mfcc.sh --cmd "$train_cmd" --nj $nj \
+						   data/$x exp/make_mfcc/$x $mfccdir || exit 1;
+		steps/compute_cmvn_stats.sh data/$x exp/make_mfcc/$x $mfccdir || exit 1;
+	done
+fi
 
 # Monophone
-echo "Monophone training"
-steps/train_mono.sh  --nj $nj --cmd "$train_cmd" \
-  data/train data/lang exp/mono
-echo "Monophone training complete"
+if [ $stage -le 1 ]; then
+	echo "Monophone training"
+	steps/train_mono.sh  --nj $nj --cmd "$train_cmd" \
+						 data/train data/lang exp/mono
+	echo "Monophone training complete"
 
-echo "Decoding the dev set using monophone models."
-utils/mkgraph.sh data/lang exp/mono exp/mono/graph
-steps/decode.sh --nj $dev_nj --cmd "$decode_cmd" \
-  exp/mono/graph data/dev exp/mono/decode_dev
-echo "Monophone decoding done."
+	echo "Decoding the dev set using monophone models."
+	utils/mkgraph.sh data/lang exp/mono exp/mono/graph
+	steps/decode.sh --nj $dev_nj --cmd "$decode_cmd" \
+					exp/mono/graph data/dev exp/mono/decode_dev
+	echo "Monophone decoding done."
+fi
 
 # Triphone
-echo "Triphone training"
-steps/align_si.sh --nj $nj --cmd "$train_cmd" \
-  data/train data/lang exp/mono exp/mono_ali
-steps/train_deltas.sh --boost-silence 1.25 --cmd "$train_cmd" \
-  300 3000 data/train data/lang exp/mono_ali exp/tri1
-echo "Triphone training complete"
+if [ $stage -le 2 ]; then
+	echo "Triphone training"
+	steps/align_si.sh --nj $nj --cmd "$train_cmd" \
+					  data/train data/lang exp/mono exp/mono_ali
+	steps/train_deltas.sh --boost-silence 1.25 --cmd "$train_cmd" \
+						  300 3000 data/train data/lang exp/mono_ali exp/tri1
+	echo "Triphone training complete"
 
-echo "Decoding the dev set using triphone models."
-utils/mkgraph.sh data/lang exp/tri1 exp/tri1/graph
-steps/decode.sh --nj $dev_nj --cmd "$decode_cmd" \
-  exp/tri1/graph data/dev exp/tri1/decode_dev
+	echo "Decoding the dev set using triphone models."
+	utils/mkgraph.sh data/lang exp/tri1 exp/tri1/graph
+	steps/decode.sh --nj $dev_nj --cmd "$decode_cmd" \
+					exp/tri1/graph data/dev exp/tri1/decode_dev
+	echo "Triphone decoding done"
+fi
+
+if [ $stage -le 3 ]; then
+	echo "Tri alignment"
+	steps/align_si.sh --nj $nj --cmd "$train_cmd" \
+					  data/train data/lang exp/tri1 exp/tri1_ali
+	steps/train_deltas.sh --boost-silence 1.25 --cmd "$train_cmd" \
+						  300 3000 data/train data/lang exp/tri1_ali exp/tri2a
+fi
+if [ $stage -le 4 ]; then
+	echo "Decoding tri ali"
+	utils/mkgraph.sh data/lang exp/tri2a exp/tri2a/graph
+	steps/decode.sh --config conf/decode.config --nj $dev_nj --cmd "$decode_cmd" \
+					exp/tri2a/graph data/dev exp/tri2a/decode_dev
+fi
+
+if [ $stage -le 5 ]; then
+	echo "Using LDA+MLTT"
+	steps/train_lda_mllt.sh --cmd "$train_cmd" 2000 11000 \
+							data/train data/lang exp/tri1_ali exp/tri2b || exit 1;
+	utils/mkgraph.sh data/lang exp/tri2b exp/tri2b/graph
+	steps/decode.sh --config conf/decode.config --nj $dev_nj --cmd "$decode_cmd" \
+					exp/tri2b/graph data/dev exp/tri2b/decode_dev
+fi
+
+if [ $stage -le 6 ]; then
+	echo "MMI"
+	steps/align_si.sh --nj $nj --cmd "$train_cmd" \
+					  data/train data/lang exp/tri2b exp/tri2b_ali || exit 1;
+	steps/make_denlats.sh --nj $nj --cmd "$train_cmd" \
+						  data/train data/lang exp/tri2b exp/tri2b_denlats || exit 1;
+	steps/train_mmi.sh data/train data/lang exp/tri2b_ali exp/tri2b_denlats exp/tri2b_mmi || exit 1;
+
+	steps/decode.sh --config conf/decode.config --nj $dev_nj --cmd "$decode_cmd" \
+					exp/tri2b/graph data/dev exp/tri2b_mmi/decode_dev
+
+	# steps/decode.sh --config conf/decode.config --iter 4 --nj $dev_nj --cmd "$decode_cmd" \
+	#				exp/tri2b/graph data/dev exp/tri2b_mmi/decode_it4
+	# steps/decode.sh --config conf/decode.config --iter 3 --nj $dev_nj --cmd "$decode_cmd" \
+	#				exp/tri2b/graph data/dev exp/tri2b_mmi/decode_it3
+	# steps/decode.sh --config conf/decode.config --iter 2 --nj $dev_nj --cmd "$decode_cmd" \
+	#				exp/tri2b/graph data/dev exp/tri2b_mmi/decode_it5
+
+fi
+
+if [ $stage -le 7 ]; then
+	steps/train_mmi.sh --boost 0.05 data/train data/lang \
+					   exp/tri2b_ali exp/tri2b_denlats exp/tri2b_mmi_b0.05 || exit 1;
+	steps/decode.sh --config conf/decode.config --nj $dev_nj --cmd "$decode_cmd" \
+					exp/tri2b/graph data/dev exp/tri2b_mmi_b0.05/decode_dev
+
+	# steps/decode.sh --config conf/decode.config --iter 4 --nj $dev_nj --cmd "$decode_cmd" \
+	#				exp/tri2b/graph data/dev exp/tri2b_mmi_b0.05/decode_it4 || exit 1;
+	# steps/decode.sh --config conf/decode.config --iter 3 --nj $dev_nj --cmd "$decode_cmd" \
+	#				exp/tri2b/graph data/dev exp/tri2b_mmi_b0.05/decode_it3 || exit 1;
+	# steps/decode.sh --config conf/decode.config --iter 5 --nj $dev_nj --cmd "$decode_cmd" \
+	#				exp/tri2b/graph data/dev exp/tri2b_mmi_b0.05/decode_it5
+
+fi
+
+if [ $stage -le 8 ]; then
+steps/train_mpe.sh data/train data/lang exp/tri2b_ali exp/tri2b_denlats exp/tri2b_mpe || exit 1;
+steps/decode.sh --config conf/decode.config --nj $dev_nj --cmd "$decode_cmd" \
+   exp/tri2b/graph data/dev exp/tri2b_mpe/decode_dev || exit 1;
+fi
+# steps/make_denlats.sh --nj 30 --sub-split 30 --cmd "$train_cmd" \
+#   data/train data/lang exp/tri1_ali exp/tri1_denlats || exit 1;
+
+# steps/train_mmi.sh --cmd "$train_cmd" --boost 0.1 \
+#   data/train_ data/lang exp/tri1_ali exp/tri1_denlats \
+#   exp/tri1_mmi  || exit 1;
 
 wait;
 # Computing the WERs on the development set
