@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import argparse
 from subprocess import call
 import re
