@@ -1,0 +1,72 @@
+Name			Roll no.
+Varun Bhatt		140260004
+Arka Sadhu
+Karan Taneja
+
+=================================
+Task 1
+=================================
+Parameters:
+	totgauss=2500
+	self-loop scale=0.25
+
+WER: 54.30
+
+=================================
+Task 2
+=================================
+WER with default triphone parameters: 53.76
+
+Parameters:
+	num_leaves=3200
+	totgauss=20000
+	Monophone
+		totgauss=2500
+		self-loop scale=0.25
+
+WER: 51.61
+
+=================================
+Task 3
+=================================
+Parameters:
+	num_leaves=7500
+	totgauss=50000
+	Monophone
+		totgauss=15000
+		self-loop scale=0.5
+
+WER monophone: 45.70
+WER triphone: 48.39
+
+=================================
+Task 4
+=================================
+Parameters: Same as previous
+
+Perplexities (in text):				
+data/srilm/mix_wbkn.gz		ppl=  301.0377  ppl1=  387.6938
+data/srilm/mix_kn43.gz 		ppl=  302.7368  ppl1=  389.9793
+data/srilm/3gram.kn.gz 		ppl=  307.5482  ppl1=  396.4543
+data/srilm/4gram.kn.gz 		ppl=  309.9099  ppl1=  399.6341
+data/srilm/3gram.wb.gz 		ppl=  315.6276  ppl1=  407.3371
+data/srilm/2gram.kn01.gz 	ppl=  325.1647  ppl1=  420.1995
+data/srilm/2gram.kn02.gz 	ppl=  411.419   ppl1=  537.2368
+data/srilm/1gram.kn.gz		ppl=  900.0105  ppl1=  1216.741
+
+Perplexities (in extra text):	
+data/srilm_external/4gram.kn.gz 	ppl=  105.6442  ppl1=  127.3834
+data/srilm_external/mix_kn43.gz 	ppl=  106.2577  ppl1=  128.1528
+data/srilm_external/mix_wbkn.gz 	ppl=  106.4522  ppl1=  128.3969
+data/srilm_external/3gram.kn.gz  	ppl=  108.1183  ppl1=  130.4878
+data/srilm_external/3gram.wb.gz    	ppl=  111.1483  ppl1=  134.2937
+data/srilm_external/2gram.kn01.gz   ppl=  144.5412  ppl1=  176.4922
+data/srilm_external/2gram.kn02.gz   ppl=  155.6523  ppl1=  190.6255
+data/srilm_external/1gram.kn.gz     ppl=  867.889   ppl1=  1138.826
+
+* ngram.* => n-gram model with KN or WB smoothing 
+* mix_kn43 => 0.45*(4-gram KN) + 0.55*(3-gram KN)
+* mix_wbkn => 0.35*(3-gram WB) + 0.65*(3-gram KN)
+
+WER monophone: 44.09
+WER triphone: 47.31
