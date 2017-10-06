@@ -14,7 +14,7 @@ set -e -o pipefail
 #                   Configuring the ASR pipeline
 ###############################################################
 stage=0    # from which stage should this script start
-corpus=./corpus  # corpus containing speech,transcripts,pronunciation dictionary
+corpus=./audio  # corpus containing speech,transcripts,pronunciation dictionary
 nj=4        # number of parallel jobs to run during training
 dev_nj=4    # number of parallel jobs to run during decoding 
 # the above two parameters are typically set to the number of cores on your machine
@@ -23,6 +23,7 @@ dev_nj=4    # number of parallel jobs to run during decoding
 # The following command prepares the data/{train,dev} directories.
 local/prepare_data.sh $corpus || exit 1;
 local/prepare_lang.sh  || exit 1;
+# local/prepare_lang_word.sh  || exit 1;
 utils/validate_lang.pl data/lang/
 
 # Now make MFCC features.
@@ -51,8 +52,8 @@ echo "Monophone decoding done."
 echo "Triphone training"
 steps/align_si.sh --nj $nj --cmd "$train_cmd" \
   data/train data/lang exp/mono exp/mono_ali
-steps/train_deltas.sh --boost-silence 1.25 --cmd "$train_cmd" \
-  300 3000 data/train data/lang exp/mono_ali exp/tri1
+steps/train_deltas.sh --cmd "$train_cmd" \
+  5000 5000 data/train data/lang exp/mono_ali exp/tri1
 echo "Triphone training complete"
 
 echo "Decoding the dev set using triphone models."

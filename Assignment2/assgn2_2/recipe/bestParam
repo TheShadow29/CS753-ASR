@@ -1,0 +1,15 @@
+Word based - 5.44 WER 
+    num_iter=10, 
+    self-loop-scale=0.5,
+    totgauss=2000
+
+Monophone - 3.4 WER
+    num_iter=10, 
+    self-loop-scale=0.05,
+    totgauss=2000
+
+Triphone - 2.04 WER
+    Mono as above
+    num_iter=25
+    num_leaves=5000
+    num_gauss=5000
