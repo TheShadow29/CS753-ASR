@@ -18,7 +18,7 @@ nj=4        # number of parallel jobs to run during training
 dev_nj=4    # number of parallel jobs to run during decoding
 # the above two parameters are typically set to the number of cores on your machine
 # datadir=/home/arktheshadow/Softwares/Kaldi_asr/kaldi/egs/assgn2_1/recipe/data
-datadir=data
+datadir=$1
 trd=$datadir/train
 # x=train
 

@@ -8,10 +8,9 @@
 *.tar
 *.tgz
 *.wav
-*recipe/conf
-*recipe/corpus
-*recipe/data
-*recipe/exp
-*recipe/local
-*recipe/mfcc
-*recipe/utils
+*corpus/
+*data/
+*exp/
+# *local/
+*mfcc/
+# *utils/
