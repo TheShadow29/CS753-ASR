@@ -13,7 +13,7 @@ set -e -o pipefail
 ###############################################################
 #                   Configuring the ASR pipeline
 ###############################################################
-stage=8    # from which stage should this script start
+stage=11    # from which stage should this script start
 corpus=./corpus  # corpus containing speech,transcripts,pronunciation dictionary
 nj=4        # number of parallel jobs to run during training
 dev_nj=4    # number of parallel jobs to run during decoding
@@ -113,6 +113,7 @@ if [ $stage -le 6 ]; then
 fi
 
 if [ $stage -le 7 ]; then
+	echo "Boosted MMI"
 	steps/train_mmi.sh --boost 0.05 data/train data/lang \
 					   exp/tri2b_ali exp/tri2b_denlats exp/tri2b_mmi_b0.05 || exit 1;
 	steps/decode.sh --config conf/decode.config --nj $dev_nj --cmd "$decode_cmd" \
@@ -128,10 +129,40 @@ if [ $stage -le 7 ]; then
 fi
 
 if [ $stage -le 8 ]; then
-steps/train_mpe.sh data/train data/lang exp/tri2b_ali exp/tri2b_denlats exp/tri2b_mpe || exit 1;
-steps/decode.sh --config conf/decode.config --nj $dev_nj --cmd "$decode_cmd" \
-   exp/tri2b/graph data/dev exp/tri2b_mpe/decode_dev || exit 1;
+	echo "MPE"
+	steps/train_mpe.sh data/train data/lang exp/tri2b_ali exp/tri2b_denlats exp/tri2b_mpe || exit 1;
+	steps/decode.sh --config conf/decode.config --nj $dev_nj --cmd "$decode_cmd" \
+					exp/tri2b/graph data/dev exp/tri2b_mpe/decode_dev || exit 1;
 fi
+
+if [ $stage -le 9 ]; then
+	echo "LDA+MLLT+SAT"
+	steps/train_sat.sh 2000 11000 data/train data/lang exp/tri2b_ali exp/tri3b || exit 1;
+	utils/mkgraph.sh data/lang exp/tri3b exp/tri3b/graph || exit 1;
+	steps/decode_fmllr.sh --config conf/decode.config --nj $dev_nj --cmd "$decode_cmd" \
+						  exp/tri3b/graph data/dev exp/tri3b/decode || exit 1;
+fi
+if [ $stage -le 10 ]; then
+	echo "MMI on top of LDA+MLLT+SAT"
+steps/align_fmllr.sh --nj $dev_nj --cmd "$train_cmd" --use-graphs true \
+  data/train data/lang exp/tri3b exp/tri3b_ali || exit 1;
+
+steps/make_denlats.sh --config conf/decode.config \
+   --nj $nj --cmd "$train_cmd" --transform-dir exp/tri3b_ali \
+  data/train data/lang exp/tri3b exp/tri3b_denlats || exit 1;
+
+steps/train_mmi.sh data/train data/lang exp/tri3b_ali exp/tri3b_denlats exp/tri3b_mmi || exit 1;
+
+steps/decode_fmllr.sh --config conf/decode.config --nj $dev_nj --cmd "$decode_cmd" \
+  --alignment-model exp/tri3b/final.alimdl --adapt-model exp/tri3b/final.mdl \
+   exp/tri3b/graph data/dev exp/tri3b_mmi/decode || exit 1;
+
+steps/decode.sh --config conf/decode.config --nj $dev_nj --cmd "$decode_cmd" \
+  --transform-dir exp/tri3b/decode  exp/tri3b/graph data/dev exp/tri3b_mmi/decode2 || exit 1;
+fi
+
+
+
 # steps/make_denlats.sh --nj 30 --sub-split 30 --cmd "$train_cmd" \
 #   data/train data/lang exp/tri1_ali exp/tri1_denlats || exit 1;
 
