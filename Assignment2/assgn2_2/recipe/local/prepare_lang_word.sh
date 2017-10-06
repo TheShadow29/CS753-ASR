@@ -8,7 +8,7 @@
 # Decided to do this using something like a real lexicon, although we
 # could also have used whole-word models.
 tmpdir=data/local/dict
-lang=data/lang
+lang=data/lang_word
 mkdir -p $tmpdir
 
 cat >$tmpdir/lexicon.txt <<EOF
@@ -55,7 +55,7 @@ cat $tmpdir/phone.list > $p/sets.txt # list of "phone sets"-- each phone is in i
 
 for t in silence nonsilence context_indep optional_silence disambig; do
   utils/sym2int.pl $lang/phones.txt <$p/$t.txt >$p/$t.int
-  cat $p/$t.int | awk '{printf(":%d", $1);} END{printf "\n"}' | sed s/:// > $p/$t.csl 
+  cat $p/$t.int | awk '{printf(":%d", $1);} END{printf "\n"}' | sed s/:// > $p/$t.csl
 done
 for t in extra_questions sets; do
   utils/sym2int.pl $lang/phones.txt <$p/$t.txt >$p/$t.int
@@ -75,7 +75,7 @@ utils/sym2int.pl --map-oov "<UNK>" $lang/words.txt <$lang/oov.txt >$lang/oov.int
 utils/make_lexicon_fst.pl $tmpdir/lexicon.txt 0.5 sil | \
   fstcompile --isymbols=$lang/phones.txt --osymbols=$lang/words.txt \
   --keep_isymbols=false --keep_osymbols=false | \
-   fstarcsort --sort_type=olabel > $lang/L.fst 
+   fstarcsort --sort_type=olabel > $lang/L.fst
 
 # Note: in this setup there are no "disambiguation symbols" because the lexicon
 # contains no homophones; and there is no '#0' symbol in the LM because it's
@@ -91,13 +91,13 @@ utils/gen_topo.pl $num_nonsil_states $num_sil_states $nonsilphonelist $silphonel
 
 # Now we prepare a simple grammar G.fst that's a kind of loop of
 # words (no silence in this, since that's handled in L.fst)
-# there are 10 options: down, eight, five, go, left, one, right, 
+# there are 10 options: down, eight, five, go, left, one, right,
 # up, zero and end-of-sentence.
 penalty=`perl -e '$prob = 1.0/10; print -log($prob); '` # negated log-prob,
   # which becomes the cost on the FST.
 ( for x in `echo down eight five go left one right up zero`; do
    echo 0 0 $x $x $penalty   # format is: from-state to-state input-symbol output-symbol cost
- done 
+ done
  echo 0 $penalty # format is: state final-cost
 ) | fstcompile --isymbols=$lang/words.txt --osymbols=$lang/words.txt \
    --keep_isymbols=false --keep_osymbols=false |\
