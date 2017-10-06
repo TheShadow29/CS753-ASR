@@ -1,4 +1,0 @@
-compute-wer --text --mode=present ark:data/dev/text ark,p:- 
-%WER 4.76 [ 7 / 147, 4 ins, 1 del, 2 sub ]
-%SER 4.76 [ 7 / 147 ]
-Scored 147 sentences, 0 not present in hyp.
