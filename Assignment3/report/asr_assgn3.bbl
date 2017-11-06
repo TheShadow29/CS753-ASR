@@ -1,0 +1,20 @@
+\begin{thebibliography}{}
+
+\bibitem[\protect\citeauthoryear{Kong, Dyer, and
+  Smith}{2015}]{DBLP:journals/corr/KongDS15}
+Kong, L.; Dyer, C.; and Smith, N.~A.
+\newblock 2015.
+\newblock Segmental recurrent neural networks.
+\newblock {\em CoRR} abs/1511.06018.
+
+\bibitem[\protect\citeauthoryear{Lafferty, McCallum, and
+  Pereira}{2001}]{Lafferty:2001:CRF:645530.655813}
+Lafferty, J.~D.; McCallum, A.; and Pereira, F. C.~N.
+\newblock 2001.
+\newblock Conditional random fields: Probabilistic models for segmenting and
+  labeling sequence data.
+\newblock In {\em Proceedings of the Eighteenth International Conference on
+  Machine Learning}, ICML '01,  282--289.
+\newblock San Francisco, CA, USA: Morgan Kaufmann Publishers Inc.
+
+\end{thebibliography}
