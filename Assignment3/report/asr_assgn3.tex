@@ -63,13 +63,20 @@ As mentioned earlier CRF looks at the set of all transition probabilities at onc
 % Now that we have the basic model ready we want to
 
 
-\subsection{Segmental Recurrent Neural Networks (sRNN)}
+\subsection{Segmental Recurrent Neural Networks (SRNN)}
+Segmental Recurrent Neural Networks (SRNN) is a generative framework. Given an input sequence it defines the joint probability distribution over segmentations of the input and labelings of the corresponding segements. The segments are contiguous subsequences of the input sequence and their representation are computed using a Bidirectional Recurrent Neural Networks (BiRNN). The corresponding sentence embeddings are used to get the output labels. Locally semi-markov conditional random fields are used to get the compatibility scores of the output labels. Moreover this can be used for both fully supervised settings where the training data consists of segmented labeled data and partially supervised setting where the segment boundaries are not explicitly given. The authors claim that even when segmentation of the original data is not explicitly required it is better to do so and this explicit segmentation leads to significantly higher accuracies.
+
+\subsubsection{Actual Model} The actual model is fairly straightforward. The input sequence is $x = (x_1, ..., x_T)$. The output sequence consists of two variables $z$ which characterizes the duration of each segment and $y$ which is the label of the corresponding segment. Therefore $z = (z_1, ... , z_p)$ where $z_i \in \mathcal{Z_{+}}$ and $y = (y_1, ... , y_p)$ where $y_i \in l$. It is interesting to note the difference with the conditional random field where the output sequence of data was of teh same length as that of the input sequence. Here each output label corresponds to a segment instead and therefore we can get away with a much smaller output sequence ($p \le T$). In cases where the input sequence is much longer and the duration of each label is much larger we can have $p \ll T$. And clearly we have $ \sum_{i=1}^p z_i = T$. We also define the start time of segment $i$ as $s_i = 1 + \sum_{i < j}z$
+
+We want to solve $$y* = argmax_y p(y | x)$$ which can be approximately written as $$y* = argmax_y \max_z p(y, z | x)$$ where we jointly maximize over $y$ and $z$ so as to make the problem tractable. However when explicit durations are not available we can only marginalize over $z$. We consider the negative log-likelihood which is to be minimized. $$\mathcal{L} = - \log p(y|x) = \log \sum_z p(y, z|x)$$
+
+We further note that $$p(y, z |x) = \frac{\prod_{i=1}^p exp(f(y_{i-k:i}, z_i, x))}{Z(x)}$$ Here $Z(x)$ is a normalization function to make it an appropriate probability distribution and $f$ is basically an affine transformation of the features of its arguments. In simpler words $f(x) = w^T \phi(\alpha(x)) + b$. Here $\phi$ is just the non-linear activation and $\alpha$ maps the input to meaningful vector space representation. In the paper the authors use $\alpha$ as another affine transformation of a concatenation of the vectors $[g_y(y_{i-k});...g_y(y_i); g_z(z_i); c_f; c_b]$. Here $g_{y/z}$ outputs the vector representation of the input and the $c_{f/b}$ is the forward and backward context from the BiRNN. $c_f, c_b$ are the encoding of the contents from $s_i: s_i+z_i - 1$ obtained from forward and backward passes of the BiRNN.
 
 
 \section{Task}
 Here we describe how the two models explained can be used for the speech extraction task described in the problem statement.
 \subsection{Conditional Random Field (CRF)}
-The task to be accomplished is described in the problem statement. For CRF we use the first formulation that is we have the observation vector $x = (x_1, ..., x_T)$ and we need to get the label sequence $y = (y_1, ... , y_)$. We consider both training and testing.
+The task to be accomplished is described in the problem statement. For CRF we use the first formulation that is we have the observation vector $x = (x_1, ..., x_T)$ and we need to get the label sequence $y = (y_1, ... , y_T)$. We consider both training and testing.
 
 \subsubsection{Training}The parameters of the CRF are the $M$ matrices which consequently depend on the parameters $(\lambda_i, \mu_j| i \in E, j \in V)$. The training data consists of segmented data with corresponding labels of being a human speech or not.
 
@@ -84,7 +91,22 @@ An important point to be noted is that a single iteration of the Algorithm S and
 A complication that can occur during the train time is that the feature s considered in the Algorithm S contains the constant S which is sometimes quite large as it is proportional to the length of the sequence. In such cases keeping track of feature totals for each observation sequence separately is helpful.
 
 \subsubsection{Testing} At test time we are given the whole sequence. Then the problem reduces to simply finding the label sequence with the largest probability. We can directly use the MLE on $p(y|x)$ and this will give us the best label sequence data and each $x_i$ for $0 \le i \le T$ will have a corresponding $y_i$ and each $y_i \in l$ which is either human speech or not.
-\subsection{Segmental Recurrent Neural Networks (sRNN)}
+\subsection{Segmental Recurrent Neural Networks (SRNN)}
+Again the main task to be done is in the problem formulation. For SRNN we use the second problem formulation. So we have the input sequence as $x = (x_1, ..., x_T)$ and output label sequence $y = (y_1, ... , y_p)$ as well as the duration sequence $z = (z_1, ... z_p)$.
+
+\subsubsection{Training} To make use of the training data, we would first need to calculate the sentence embeddings (both forward and backward). Then we want to get the most likely segmentation and labeling. To get the sentence embeddings if we naively do a forward and backward pass it will take $O(n^3)$ steps but efficient calculation using dynamic programming allows us to do it in $O(n^2)$. This basically utilizes the computation from state $i$ to state $j$ without repeating the same calculation more than once.
+
+To get the partition function $Z(x)$ we again use dynamic programming to calculate it in polynomial time.
+$$\alpha_0 = 1$$ $$\alpha_j = \sum_{i < j} \alpha_i \sum_{y \in l} exp(f(.))$$ $$Z(x) = \alpha_T$$ Here $.$ refers to the same arguments used for the calculation of the probability distribution $p(y,z|x)$. This in turn would have required us to calculate the sentence embeddings which we calculated earlier.
+The updates are pretty similar to forward pass recursion in HMM. Changing all summation parameters to max operators we can do the viterbi-like pass which will result in the maximal posteriori segmentation and labeling.
+
+Again to calculate the posterior marginal which is $Z(x, y)$ we use a similar dynamic programming algorithm by introducing an extra indexing of the $y$ variable.
+
+Now that we have $Z(x)$ and $Z(x,y)$ we start the trainign procedure. We are only concerned with the supervised training part since we have such data and it will obviously give better results. We want to reduce the loss function described earlier. $$\mathcal{L} = \sum_{(x, y, z) \in D} - \log p(y, z |x)$$ $$\mathcal{L} = \sum_{(x, y, z) \in D} \log Z(x) - \log Z(x, y, z)$$ Here $Z(x y, z)$ is the un-normalized conditional probability of the corresponding segmentation and labeling given the input.
+
+Following backpropagation,  standard optimization algorithms like Adam can be used for updating the weights of the BiRNN. Another equivalent way of backpropagation would be to use the backward variants of the above dynamic programming algorithms.
+
+\subsubsection{Testing} We would need to repeat all the parts of the training process other than the backpropagation and updating weights. Then choose the pair $(y, z)$ with the largest probability when conditioned on the input sequence. Here also we do take the MLE estimate of $p(y, z |x)$ as the resulting segmentation and label. Then we simply extract out the corresponding frames which lie in the segments tagged as human speech.
 
 \section{Benefits and Shortcomings}
 Here both Benefits and Shortcomings of the proposed models are given.
@@ -92,6 +114,7 @@ Here both Benefits and Shortcomings of the proposed models are given.
 \subsubsection{Benefits} CRF comes with very obvious benefits some of which have already been discussed.
 \begin{itemize}
 \item It is able to relax the strong assumption made in the HMM about independence of observation from previous observation. In CRF it takes in the whole sequence and therefore sees the whole context.
+\item The features do not need to completely specify a state or observation so we can expect it to require less training data.
 \item It also circumvents the label-bias problem inherent in many other discriminative framework like MEMMs by considering all the transition possible rather than considering only the transitions from the present state.
 \end{itemize}
 
@@ -100,7 +123,21 @@ Here both Benefits and Shortcomings of the proposed models are given.
 \item Firstly the transition matrices can depend as $O(n^2)$ on the number of labels required. In our case it is not a problem since there are only two labels, but in the case with large number of labels this can be an obvious shortcoming.
 \item The other is related to its inherent model in that it requires to see the whole sequence and therefore it may miserably fail with only partial observability like seeing only the first 3 observation vectors would not allow the model to make any good decision.
 \end{itemize}
-\subsection{Segmental Recurrent Neural Networks (sRNN)}
+\subsection{Segmental Recurrent Neural Networks (SRNN)}
+\subsubsection{Benefits} SRNN gives some interesting insights and interesting benefits.
+\begin{itemize}
+\item Firstly it gives both the segment durations as well as the segment labels jointly. Moreover it can work even in the partially supervised case as well.
+\item It also shows that in cases where explicit segmentations are not required, when this is done it leads to accuracy improvement.
+\item Output sequence of labels and durations can be much smaller than the input sequence length.
+\item Using BiRNN it is able to encode contextual information as well.
+\end{itemize}
+
+\subsubsection{Shortcomings} SRNN are not devoid of shortcomings.
+\begin{itemize}
+\item SRNN are essentially generative framework. In general it is found that discriminative framework gives better results and hence it may give sub-par performance on some tasks.
+\item While it can accommodate $k^{th}$ markov model, the dynamic procedure may blow up and it may take a lot of time for individual updates.
+\item It uses BiRNN which inherently have the problem of large latency.
+\end{itemize}
 
 \bibliography{ref.bib}
 \bibliographystyle{aaai}
