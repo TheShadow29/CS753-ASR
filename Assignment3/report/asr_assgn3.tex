@@ -37,11 +37,22 @@ We define the observation sequence as observation vectors upto time T(which is a
 \section{Methodology}
 Here we describe both methods Conditional Random Fields(CRF) \cite{Lafferty:2001:CRF:645530.655813} and Segmental Recurrent Neural Networks (sRNN) \cite{DBLP:journals/corr/KongDS15} in more detail.
 \subsection{Conditional Random Field (CRF)}
+Conditional Random field is a discriminative framework which is able to model the sequence of data better in the sense of relaxing strong independence conditions in Hidden Markov Models (HMM) and overcoming the label bias problem inherent in Maximum Entropy Makov Models (MEMMs).
+
+The independence condition in HMM is requried because we are modeling the joing probability distribution $P(Y, X)$. Here $Y$ is the label sequence and $X$ is the input sequence. It is necessary to make the independence assumption for the probability distribution to be tractable. CRF overcome this by instead modelling $P(Y|X)$ which is the probability distribution of $Y$ conditioned over $X$ and not explicitly modeling the distribution $P(X)$. CRF gets away by not modeling $P(X)$ because at test time the observations are anyway fixed. This also allows for context dependent information to be captured because the label sequence  $Y$ is no longer needed to be decided only by the current observation.
+
+The paper also compares CRF to other discriminative framework like MEMMs and claims like models like MEMMs are inherently biased towards states which have smaller number of output branches. The reason for this is that when it is at a particular state the competition of the next state is only from the current state. In other words we are only comparing transitions to the next state from the current state instead of looking at every other transition from any state to any other state (including self loops as well). To avoid this either the finite state machine can be determinised but this can lead to explosion of number of states or to start with fully connected model but that doesn't allow us to use our domain knowledge or priors. This problem is circumvented in CRF because the individual transitions do not explicitly choose the transition rather only amplify or dampen the probability mass they receive.
+
+\subsubsection{Actual Model}
+Let $X$ be the random variable over data sequence and $Y$ be the random variabl over label sequence. Even though $X$ and $Y$ are jointly distributed we will try to get the probability distribution $p(Y|X)$ and we choose not to model explicitly the distribution $p(X)$ as it is already fixed during runtime.
+
+We consider a graph $G=(V,E)$ characterized by vertex set $V$ and edge set $E$ and let $Y = (Y_v)_{v \in V}$ be indexed by the vertices of the vertex set. Then we define $(X, Y)$ to be a conditional random field if the random variables $Y_v$ when conditioned on $X$ obey the Markov property with respect to the graph: $p(Y_v | X, Y_w, w \ne v) = p(Y_v | X, Y_w, w \in nbd(v))$ Here $nbd(v)$ is the set of vertices one-hop distance away from the vertex v or in the 1-neighbourhood of v.
 \subsection{Segmental Recurrent Neural Networks (sRNN)}
 
 \section{Task}
 Here we describe how the two models explained can be used for the speech extraction task described in the problem statement.
 \subsection{Conditional Random Field (CRF)}
+
 \subsection{Segmental Recurrent Neural Networks (sRNN)}
 
 \section{Benefits and Shortcomings}
